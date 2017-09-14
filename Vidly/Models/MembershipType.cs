@@ -13,10 +13,6 @@ namespace Vidly.Models
         [Required]
         [StringLength(255)]
         public string Name { get; set; }
-
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-        public DateTime BirthDate { get; set; }
         public short SignUpFee { get; set; }
         public byte DurationInMonth { get; set; }
         public byte DiscountRate { get; set; }  
