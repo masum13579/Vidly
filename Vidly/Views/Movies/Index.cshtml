@@ -1,24 +1,37 @@
-﻿@model IEnumerable<Vidly.Models.Movie>
+﻿@using Antlr.Runtime.Tree
+@model IEnumerable<Vidly.Models.Movie>
 @{
     ViewBag.Title = "Movies";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <h2>Movies</h2>
+@Html.ActionLink("New Movies", "New", "Movies", null, new {@class="btn btn-default"})
+<br /><br />
+@if (!Model.Any())
+{
+    <p>We Dont have any movie yet.</p>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Movie</th>
+                <th>Gener</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var movie in Model)
+            {
+                <tr>
+                    <td>@Html.ActionLink(movie.Name, "Edit", "Movies", new {id = movie.Id}, null)</td>
+                    <td>@movie.Genre.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
-<table class="table table-bordered table-hover">
-    <thead>
-    <tr>
-        <th>Movies</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var movie in Model)
-    {
-        <tr>
-            <td>@movie.Name</td>
-        </tr>
-    }
-    </tbody>
-</table>
+
 

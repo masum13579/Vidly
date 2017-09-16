@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Data.Entity;
 using System.Web;
 using System.Web.Mvc;
 using Vidly.Models;
@@ -10,46 +11,93 @@ namespace Vidly.Controllers
 {
     public class MoviesController : Controller
     {
-        //GET: Movies
+        private ApplicationDbContext _context;
+
+        public MoviesController()
+        {
+            _context = new ApplicationDbContext();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _context.Dispose();
+        }
+
         public ActionResult Index()
         {
-            var movies = GetMovies();
+            var movies = _context.Movies.Include(m => m.Genre).ToList();
 
             return View(movies);
         }
 
-        public ActionResult Random()
+        public ActionResult Details(int id)
         {
-            var movie = new Movie() {Name = "Shrek!"};
-            var customers = new List<Customer>
-            {
-                new Customer {Name = "Customer 1"},
-                new Customer {Name = "Customer 1"}
-            };
+            var movie = _context.Movies.Include(m => m.Genre).SingleOrDefault(m => m.Id == id);
 
-            var viewModel = new RandomMovieViewModel
-            {
-                Movie = movie,
-                Customers = customers
-            };
+            if (movie == null)
+                return HttpNotFound();
 
-            return View(viewModel);
+            return View(movie);
         }
 
-        private IEnumerable<Movie> GetMovies()
+        public ActionResult New()
         {
-            return new List<Movie>
+            var genre = _context.Genres.ToList();
+
+            var viewModel = new MovieFromViewModel
             {
-                new Movie {Id = 1, Name = "Shark"},
-                new Movie {Id = 2, Name = "Wall-e"}
+                Genres = genre
             };
+
+            return View("MovieForm", viewModel);
         }
 
-
-        [Route("movies/released/{year}/{month}")]
-        public ActionResult ByReleasedDate(int year, int month)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Save(Movie movie)
         {
-            return Content(year + "/" + month);
+            if (!ModelState.IsValid)
+            {
+                var viewModel = new MovieFromViewModel(movie)
+                {
+                    Genres = _context.Genres.ToList()
+                };
+
+                return View("MovieForm", viewModel);
+            }
+            if (movie.Id == 0)
+            {
+                movie.DateAdded = DateTime.Now;
+                _context.Movies.Add(movie);
+            }
+            else
+            {
+                var movieInDb = _context.Movies.Single(m => m.Id == movie.Id);
+
+                movieInDb.Name = movie.Name;
+                movieInDb.ReleaseDate = movie.ReleaseDate;
+                movieInDb.GenreId = movie.GenreId;
+                movieInDb.NumberInStock = movie.NumberInStock;
+            }
+
+            _context.SaveChanges();
+
+            return RedirectToAction("Index", "Movies");
+        }
+
+        public ActionResult Edit(int id)
+        {
+            var movie = _context.Movies.SingleOrDefault(m => m.Id == id);
+
+            if (movie == null)
+                HttpNotFound();
+            var viewModel = new MovieFromViewModel(movie)
+            {
+                
+                Genres = _context.Genres.ToList()
+            };
+
+            return View("MovieForm", viewModel);
         }
     }
 }
